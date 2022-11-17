@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat PobreSoft</title>
+ 
+      <style>
+      #contentWrap { display: none;}
+      </style>
+      <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css" integrity="sha512-xh6O/CkQoPOWDdYTDqeRdPCVd1SpvCA9XXcUnZS2FmJNp1coAFzvtCN9BmamE+4aHK8yyUHUSCcJHgXloTyT2A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    </head>
+<body>
+  <nav class="navbar navbar-light bg-warning">
+  <a class="navbar-brand mx-auto" href="/">PobreSoft Chat</a>
+  </nav>
+  <div class="card col-md-4 mt-5 mx-auto" id="nickWrap">
+    <div class="card-header">
+      <h3>Ingresa un nombre de usuario</h3>
+    </div>
+    <p id="nickError"></p>
+    <div class="card-body">
+      <form id="nickForm">
+      <input type="text" id="nickname" class="form-control">
+     
+      <button type="submit" class="btn btn-warning btn-blobk mt-2"><i class="fa-solid fa-user-plus"></i>Agregar</button>
+       </form>
+    </div>
+
+  </div>
+  <div class="container" id="contentWrap">
+    <div class="row mt-2">
+    <div class="col-md-6 ofsset-md-1">
+      <div class="card">
+        <div class="card-header">
+          <g4>A chatear</g4>
+        </div>
+        <div id="chat" class="card-body">
+        </div>
+        <form class="card-footer" id="message-form">
+          <div class="input-group">
+          <input type="text" class="form-control" id="message">
+          <div class="input-group-append">
+         
+        <button type="submit" class="btn btn-warning"><i class="fa-regular fa-comment-arrow-up-right"></i>Enviar</button>
+        </div>
+      </div>
+        </form>
+      </div>
+    </div>
+<div class="col-md-3">    
+<div class="card">
+<div class="card-header">
+  <h3>Usuarios</h3>
+</div>
+<div class="card-body">
+  <div id="usernames"></div>
+</div>
+</div>
+</div>
+</div>
+  </div>
+ 
+</body>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  var socket = io();
+  var chat = document.getElementById('chat');
+  var messageForm = document.getElementById('message-form');
+  var messageBox = document.getElementById('message');
+  let usuarioHost;
+
+  //Obtener datos del formulario nickForm
+
+  const nickForm=document.getElementById('nickForm');
+  const nickError=document.getElementById('nickError');
+  const nickname=document.getElementById('nickname');
+ 
+  const nickWrap=document.getElementById('nickWrap');
+  const contentWrap=document.getElementById('contentWrap');
+  //obtener usuarios
+  const usuarios=document.getElementById('usernames');
+
+  nickForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    if (nickname.value) {
+      usuarioHost = nickname.value;
+      socket.emit('new user', nickname.value, data => {
+
+      if(data){
+        nickWrap.style.display="none";
+        contentWrap.style.display="block";
+      } 
+      else {
+      nickError.innerHTML=`
+      <div class="alert alert-danger">
+        Este usuario ya existe.
+        </div>
+      `;
+      }
+    nickname.value='';
+   });
+    }
+  });
+
+  messageForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    if (messageBox.value)
+    {
+ 
+      socket.emit('send message', messageBox.value);
+      messageBox.value = '';
+    }
+  });
+
+     socket.on('usernames', data =>{
+
+      console.log(data);
+      let html='';
+ 
+      for(i in data ) {
+
+        if(data[i] === usuarioHost) {
+          html+=`<p> <i class="fas fa-user"> </i> ${data[i] + ' (yo)'} </p>`;
+        } else {
+          html+=`<p> <i class="fas fa-user"> </i> ${data[i]} </p>`;
+        }
+        console.log(html);
+        usuarios.innerHTML=html;
+      }
+    });
+
+    socket.on('new message', function(data) {
+      console.log(data);
+ 
+    chat.innerHTML+=`<b>${data.nick}</b>: ${data.msg} <br/>`;  
+   
+   
+  });
+</script>
+</html>
